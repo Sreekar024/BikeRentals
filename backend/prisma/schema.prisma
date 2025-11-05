@@ -1,0 +1,208 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+  TECHNICIAN
+}
+
+enum KycStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum BikeType {
+  STANDARD
+  E_BIKE
+}
+
+enum BikeStatus {
+  AVAILABLE
+  RESERVED
+  IN_RIDE
+  MAINTENANCE
+}
+
+enum TransactionType {
+  TOPUP
+  HOLD
+  CHARGE
+  REFUND
+  PENALTY
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum ReservationStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  COMPLETED
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model User {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  email       String    @unique
+  name        String
+  passwordHash String
+  role        Role      @default(STUDENT)
+  kycStatus   KycStatus @default(PENDING)
+  studentId   String?   @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  wallet       Wallet?
+  reservations Reservation[]
+  rides        Ride[]
+  createdTickets MaintenanceTicket[] @relation("CreatedBy")
+  assignedTickets MaintenanceTicket[] @relation("AssignedTo")
+
+  @@map("users")
+}
+
+model Wallet {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  userId   String @unique @db.ObjectId
+  balance  Float  @default(0)
+  currency String @default("INR")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@map("wallets")
+}
+
+model Transaction {
+  id       String            @id @default(auto()) @map("_id") @db.ObjectId
+  walletId String            @db.ObjectId
+  type     TransactionType
+  amount   Float
+  status   TransactionStatus @default(PENDING)
+  metadata Json?
+  createdAt DateTime         @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
+
+model Dock {
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  lat      Float
+  lng      Float
+  capacity Int
+  active   Boolean @default(true)
+
+  bikes      Bike[]
+  startRides Ride[] @relation("StartDock")
+  endRides   Ride[] @relation("EndDock")
+
+  @@map("docks")
+}
+
+model Bike {
+  id         String     @id @default(auto()) @map("_id") @db.ObjectId
+  type       BikeType   @default(STANDARD)
+  status     BikeStatus @default(AVAILABLE)
+  dockId     String?    @db.ObjectId
+  batteryPct Int?
+  lastSeenAt DateTime   @default(now())
+  lat        Float?
+  lng        Float?
+
+  dock         Dock?               @relation(fields: [dockId], references: [id])
+  reservations Reservation[]
+  rides        Ride[]
+  tickets      MaintenanceTicket[]
+
+  @@map("bikes")
+}
+
+model Reservation {
+  id        String            @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String            @db.ObjectId
+  bikeId    String            @db.ObjectId
+  startAt   DateTime
+  expiresAt DateTime
+  status    ReservationStatus @default(ACTIVE)
+  createdAt DateTime          @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bike Bike @relation(fields: [bikeId], references: [id], onDelete: Cascade)
+
+  @@map("reservations")
+}
+
+model Ride {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String    @db.ObjectId
+  bikeId       String    @db.ObjectId
+  startDockId  String?   @db.ObjectId
+  endDockId    String?   @db.ObjectId
+  startedAt    DateTime  @default(now())
+  endedAt      DateTime?
+  duration     Int?      // minutes
+  distance     Float?    // km
+  cost         Float?
+  routeGeoJSON Json?
+
+  user      User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bike      Bike  @relation(fields: [bikeId], references: [id], onDelete: Cascade)
+  startDock Dock? @relation("StartDock", fields: [startDockId], references: [id])
+  endDock   Dock? @relation("EndDock", fields: [endDockId], references: [id])
+
+  @@map("rides")
+}
+
+model MaintenanceTicket {
+  id         String       @id @default(auto()) @map("_id") @db.ObjectId
+  bikeId     String       @db.ObjectId
+  createdBy  String       @db.ObjectId
+  assignedTo String?      @db.ObjectId
+  status     TicketStatus @default(OPEN)
+  title      String
+  notes      String?
+  photos     String[]     @default([])
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  bike     Bike  @relation(fields: [bikeId], references: [id], onDelete: Cascade)
+  creator  User  @relation("CreatedBy", fields: [createdBy], references: [id])
+  assignee User? @relation("AssignedTo", fields: [assignedTo], references: [id])
+
+  @@map("maintenance_tickets")
+}
+
+model PricingRule {
+  id                  String  @id @default(auto()) @map("_id") @db.ObjectId
+  perMinute           Float   @default(2.0)
+  perKm               Float   @default(5.0)
+  unlockFee           Float   @default(10.0)
+  minBalanceRequired  Float   @default(50.0)
+  latePenaltyPerMin   Float   @default(5.0)
+  offDockPenalty      Float   @default(100.0)
+  active              Boolean @default(true)
+  createdAt           DateTime @default(now())
+
+  @@map("pricing_rules")
+}
