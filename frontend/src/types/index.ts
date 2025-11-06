@@ -5,6 +5,8 @@ export interface User {
   role: 'STUDENT' | 'ADMIN' | 'TECHNICIAN';
   kycStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
   studentId?: string;
+  phone?: string;
+  location?: string;
   wallet?: Wallet;
 }
 

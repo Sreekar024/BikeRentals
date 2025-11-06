@@ -24,6 +24,22 @@ router.get('/', authenticate, async (req: AuthRequest, res, next) => {
   }
 });
 
+router.get('/current-reservation', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const reservation = await prisma.reservation.findFirst({
+      where: { 
+        userId: req.user!.id,
+        status: 'ACTIVE',
+        expiresAt: { gt: new Date() }
+      },
+      include: { bike: { include: { dock: true } } }
+    });
+    res.json({ reservation });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/:id', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const bike = await prisma.bike.findUnique({

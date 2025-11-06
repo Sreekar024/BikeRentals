@@ -15,17 +15,23 @@ export default function UserManagement() {
 
   const fetchUsers = async () => {
     try {
+      console.log('Fetching users from:', `${API_URL}/api/admin/users`);
       const response = await fetch(`${API_URL}/api/admin/users`, {
         credentials: 'include'
       });
 
+      console.log('Response status:', response.status);
       if (!response.ok) {
-        throw new Error('Failed to fetch users');
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`Failed to fetch users: ${response.status}`);
       }
 
       const data = await response.json();
-      setUsers(data.users);
+      console.log('Users data:', data);
+      setUsers(data.users || []);
     } catch (error) {
+      console.error('Fetch users error:', error);
       toast.error('Failed to fetch users');
     } finally {
       setIsLoading(false);
@@ -114,7 +120,14 @@ export default function UserManagement() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
+              {users.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    No users found
+                  </td>
+                </tr>
+              ) : (
+                users.map((user) => (
                 <tr key={user.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
@@ -162,7 +175,8 @@ export default function UserManagement() {
                     )}
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>

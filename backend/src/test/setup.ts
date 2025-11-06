@@ -11,18 +11,18 @@ afterAll(async () => {
 });
 
 afterEach(async () => {
-  // Clean up test data
-  const tablenames = await prisma.$queryRaw<Array<{ tablename: string }>>`
-    SELECT tablename FROM pg_tables WHERE schemaname='public'
-  `;
-
-  for (const { tablename } of tablenames) {
-    if (tablename !== '_prisma_migrations') {
-      try {
-        await prisma.$executeRawUnsafe(`TRUNCATE TABLE "public"."${tablename}" CASCADE;`);
-      } catch (error) {
-        console.log({ error });
-      }
-    }
+  // Clean up test data for MongoDB
+  try {
+    await prisma.user.deleteMany({});
+    await prisma.bike.deleteMany({});
+    await prisma.dock.deleteMany({});
+    await prisma.reservation.deleteMany({});
+    await prisma.ride.deleteMany({});
+    await prisma.wallet.deleteMany({});
+    await prisma.transaction.deleteMany({});
+    await prisma.maintenanceTicket.deleteMany({});
+    await prisma.pricingRule.deleteMany({});
+  } catch (error) {
+    console.log({ error });
   }
 });

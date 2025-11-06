@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Icon } from 'leaflet';
-import { toast } from 'react-hot-toast';
 import { useBikeStore } from '../store/bikeStore';
 import { useAuthStore } from '../store/authStore';
-import { Bike, Battery, MapPin, Clock, DollarSign } from 'lucide-react';
+import { Bike, Battery, MapPin } from 'lucide-react';
 import ReservationModal from '../components/ReservationModal';
 import ActiveRide from '../components/ActiveRide';
 
@@ -16,13 +15,14 @@ const bikeIcon = new Icon({
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
-  const { bikes, currentReservation, currentRide, fetchBikes } = useBikeStore();
+  const { bikes, currentReservation, currentRide, fetchBikes, fetchCurrentReservation } = useBikeStore();
   const [selectedBike, setSelectedBike] = useState<string | null>(null);
   const [showReservationModal, setShowReservationModal] = useState(false);
 
   useEffect(() => {
     fetchBikes();
-  }, [fetchBikes]);
+    fetchCurrentReservation();
+  }, [fetchBikes, fetchCurrentReservation]);
 
   if (user?.kycStatus !== 'APPROVED') {
     return (
@@ -78,7 +78,7 @@ export default function DashboardPage() {
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow h-96">
             <MapContainer
-              center={[30.7570, 76.7691]}
+              center={[30.7687902, 76.5753719]}
               zoom={16}
               style={{ height: '100%', width: '100%' }}
             >

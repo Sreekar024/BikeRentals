@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
-import { useAuthStore } from '../store/authStore';
 import { Transaction } from '../types';
 import { Wallet, Plus, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 
@@ -10,11 +9,10 @@ interface TopupForm {
 }
 
 export default function WalletPage() {
-  const { user } = useAuthStore();
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { register, handleSubmit, reset } = useForm<TopupForm>();
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<TopupForm>();
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -46,7 +44,7 @@ export default function WalletPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(data)
+        body: JSON.stringify({ amount: Number(data.amount) })
       });
 
       if (!response.ok) {
@@ -119,14 +117,24 @@ export default function WalletPage() {
                 Amount (₹)
               </label>
               <input
-                {...register('amount', { required: true, min: 10, max: 5000 })}
+                {...register('amount', { 
+                  required: 'Amount is required',
+                  min: { value: 10, message: 'Minimum amount is ₹10' },
+                  max: { value: 5000, message: 'Maximum amount is ₹5000' },
+                  valueAsNumber: true
+                })}
                 type="number"
                 min="10"
                 max="5000"
                 step="10"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.amount ? 'border-red-300' : 'border-gray-300'
+                }`}
                 placeholder="Enter amount"
               />
+              {errors.amount && (
+                <p className="text-xs text-red-600 mt-1">{errors.amount.message}</p>
+              )}
               <p className="text-xs text-gray-500 mt-1">
                 Minimum: ₹10, Maximum: ₹5000
               </p>

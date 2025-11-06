@@ -6,6 +6,7 @@ interface BikeState {
   currentReservation: Reservation | null;
   currentRide: Ride | null;
   fetchBikes: () => Promise<void>;
+  fetchCurrentReservation: () => Promise<void>;
   reserveBike: (bikeId: string, duration: number) => Promise<void>;
   unlockBike: (bikeId: string) => Promise<string>;
   startRide: (reservationId: string) => Promise<void>;
@@ -28,6 +29,20 @@ export const useBikeStore = create<BikeState>((set, get) => ({
     set({ bikes });
   },
 
+  fetchCurrentReservation: async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/bikes/current-reservation`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const { reservation } = await response.json();
+        set({ currentReservation: reservation });
+      }
+    } catch (error) {
+      console.error('Failed to fetch current reservation:', error);
+    }
+  },
+
   reserveBike: async (bikeId: string, duration: number) => {
     const response = await fetch(`${API_URL}/api/bikes/reserve`, {
       method: 'POST',
@@ -43,6 +58,7 @@ export const useBikeStore = create<BikeState>((set, get) => ({
 
     const { reservation } = await response.json();
     set({ currentReservation: reservation });
+    get().fetchBikes(); // Refresh bikes list
   },
 
   unlockBike: async (bikeId: string) => {

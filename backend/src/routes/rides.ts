@@ -176,12 +176,19 @@ router.post('/end', authenticate, async (req: AuthRequest, res, next) => {
 
 router.get('/history', authenticate, async (req: AuthRequest, res, next) => {
   try {
-    const rides = await prisma.ride.findMany({
-      where: { userId: req.user!.id },
-      include: { bike: true, startDock: true, endDock: true },
-      orderBy: { startedAt: 'desc' }
-    });
-    res.json({ rides });
+    const [rides, reservations] = await Promise.all([
+      prisma.ride.findMany({
+        where: { userId: req.user!.id },
+        include: { bike: true, startDock: true, endDock: true },
+        orderBy: { startedAt: 'desc' }
+      }),
+      prisma.reservation.findMany({
+        where: { userId: req.user!.id },
+        include: { bike: { include: { dock: true } } },
+        orderBy: { startAt: 'desc' }
+      })
+    ]);
+    res.json({ rides, reservations });
   } catch (error) {
     next(error);
   }

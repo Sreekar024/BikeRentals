@@ -22,11 +22,13 @@ async function main() {
   const adminPassword = await bcrypt.hash('admin123', 12);
   const admin = await prisma.user.create({
     data: {
-      email: 'admin@college.edu',
-      name: 'Admin User',
+      email: 'sreekarchimbili@gmail.com',
+      name: 'Chimbili Sreekar',
       passwordHash: adminPassword,
       role: Role.ADMIN,
       kycStatus: 'APPROVED',
+      phone: '8888656557',
+      location: 'Chandigarh University',
       wallet: { create: { balance: 1000 } }
     }
   });
@@ -68,19 +70,19 @@ async function main() {
   // Create docks at Chandigarh University
   const docks = await Promise.all([
     prisma.dock.create({
-      data: { name: 'Main Library', lat: 30.7570, lng: 76.7691, capacity: 20 }
+      data: { name: 'Main Library', lat: 30.7687902, lng: 76.5753719, capacity: 20 }
     }),
     prisma.dock.create({
-      data: { name: 'Engineering Block', lat: 30.7580, lng: 76.7700, capacity: 25 }
+      data: { name: 'Engineering Block', lat: 30.7697902, lng: 76.5763719, capacity: 25 }
     }),
     prisma.dock.create({
-      data: { name: 'Student Center', lat: 30.7560, lng: 76.7680, capacity: 15 }
+      data: { name: 'Student Center', lat: 30.7677902, lng: 76.5743719, capacity: 15 }
     }),
     prisma.dock.create({
-      data: { name: 'Sports Complex', lat: 30.7590, lng: 76.7710, capacity: 18 }
+      data: { name: 'Sports Complex', lat: 30.7707902, lng: 76.5773719, capacity: 18 }
     }),
     prisma.dock.create({
-      data: { name: 'Hostel Area', lat: 30.7550, lng: 76.7670, capacity: 22 }
+      data: { name: 'Hostel Area', lat: 30.7667902, lng: 76.5733719, capacity: 22 }
     })
   ]);
 
