@@ -31,6 +31,7 @@ async function main() {
       location: 'Chandigarh University',
       wallet: { create: { balance: 1000 } }
     }
+    
   });
 
   // Create 5 sample users
